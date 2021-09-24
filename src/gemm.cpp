@@ -12,6 +12,11 @@
 #include <iostream>
 #include <unistd.h>
 
+inline double compute_running_avg(double previous_avg, int N, double new_val)
+{
+  return previous_avg + ( (new_val - previous_avg)  / N );
+}
+
 //------------------------------------------------------------------------------
 /// \brief
 ///     Scans the command line.
@@ -46,6 +51,7 @@ void run (int argc, char** argv)
     bool testing = false;
     bool times = false;
     bool hostname = false;
+    bool return_avg = false;
 
     int arg = 15;
     while (arg < argc) {
@@ -65,6 +71,7 @@ void run (int argc, char** argv)
         if (str == "testing")   testing = true;
         if (str == "times")     times = true;
         if (str == "hostname")  hostname = true;
+	if (str == "average")  return_avg = true;
         ++arg;
     }
 
@@ -169,6 +176,8 @@ void run (int argc, char** argv)
         else    mode = BatchedGemm::Mode::Standard;
     }
 
+    std::vector<double> running_avg(dev_gemms.size(), 0.0);
+
     // Initialize with a constant or random numbers.
     for (int dev = 0; dev < dev_gemms.size(); ++dev) {
         if (testing)
@@ -178,7 +187,7 @@ void run (int argc, char** argv)
     }
 
     // Print column labels.
-    if (time_span > 0.0) {
+    if (time_span > 0.0 && !return_avg) {
         for (int dev = 0; dev < dev_gemms.size(); ++dev)
             printf(" device_%d_[GFLOPS]", dev);
         printf(" timestamp_[sec]");
@@ -213,6 +222,9 @@ void run (int argc, char** argv)
             gflops[dev] = retval.first;
             time_in_sec[dev] = retval.second;
             if (count > 0) {
+	      if (return_avg)
+		running_avg[dev] = compute_running_avg(running_avg[dev], count, gflops[dev]);
+	      else
                 printf("%18.2lf", gflops[dev]);
             }
         }
@@ -221,7 +233,7 @@ void run (int argc, char** argv)
         // Print if not the first iteration.
         timestamp = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::high_resolution_clock::now()-beginning).count();
-        if (count > 0)
+        if (count > 0 && !return_avg)
             printf("%16.2lf", timestamp/1e6);
 
         // Print execution times.
@@ -240,13 +252,19 @@ void run (int argc, char** argv)
             printf("\t%s", hostname);
         }
 
-        if (count > 0)
+        if (count > 0 && !return_avg)
             printf("\n");
 
         ++count;
     }
     // Loop until time_span reached.
     while (timestamp/1e6 <= time_span || count < 2);
+
+    if (return_avg) {
+      for(int dev = 0; dev < dev_gemms.size(); dev++)
+	printf ("Device %d: avg GFLOPS %18.2lf\n",dev,running_avg[dev]);
+      printf("Samples: %d\n",count);
+    }
 }
 
 //------------------------------------------------------------------------------
