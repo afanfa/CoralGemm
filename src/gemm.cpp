@@ -195,8 +195,9 @@ void run (int argc, char** argv)
         else    mode = BatchedGemm::Mode::Standard;
     }
 
-    std::vector<double> running_avg(dev_gemms.size(), 0.0);
-
+    std::vector<double> running_avg_gflops(dev_gemms.size(), 0.0);
+    std::vector<double> running_avg_times(dev_gemms.size(), 0.0);
+    
     // Initialize with a constant or random numbers.
     for (int dev = 0; dev < dev_gemms.size(); ++dev) {
         if (testing)
@@ -242,9 +243,14 @@ void run (int argc, char** argv)
             time_in_sec[dev] = retval.second;
             if (count > 0) {
 	      if (return_avg)
-		running_avg[dev] = compute_running_avg(running_avg[dev], count, gflops[dev]);
+		{
+		  running_avg_gflops[dev] = compute_running_avg(running_avg_gflops[dev], count, gflops[dev]);
+		  running_avg_times[dev] = compute_running_avg(running_avg_times[dev], count, time_in_sec[dev]*1e6);
+		}
 	      else
-                printf("%18.2lf", gflops[dev]);
+		{
+		  printf("%18.2lf", gflops[dev]);
+		}
             }
         }
 
@@ -281,8 +287,8 @@ void run (int argc, char** argv)
 
     if (return_avg) {
       for(int dev = 0; dev < dev_gemms.size(); dev++)
-	printf ("Device %d: m: %d n: %d k: %d lda: %d ldb: %d ldc: %d avg GFLOPS %18.2lf\n",dev,std::atoi(argv[7]),std::atoi(argv[8]),std::atoi(argv[9]),
-		std::atoi(argv[10]),std::atoi(argv[11]),std::atoi(argv[12]),running_avg[dev]);
+	printf ("Device %d: m: %d n: %d k: %d lda: %d ldb: %d ldc: %d avg GFLOPS %18.2lf time(sec): %14.0lf\n",dev,std::atoi(argv[7]),std::atoi(argv[8]),std::atoi(argv[9]),
+		std::atoi(argv[10]),std::atoi(argv[11]),std::atoi(argv[12]),running_avg_gflops[dev],running_avg_times[dev]);
       printf("Samples: %d\n",count);
     }
 }
