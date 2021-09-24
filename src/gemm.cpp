@@ -52,6 +52,8 @@ void run (int argc, char** argv)
     bool times = false;
     bool hostname = false;
     bool return_avg = false;
+    bool alpha_minus_one = false;
+    bool one_beta = false;
 
     int arg = 15;
     while (arg < argc) {
@@ -68,10 +70,12 @@ void run (int argc, char** argv)
         if (str == "sharedA")   shared_a = true;
         if (str == "sharedB")   shared_b = true;
         if (str == "zeroBeta")  zero_beta = true;
+	if (str == "oneBeta")   one_beta = true;
+	if (str == "-oneAlpha") alpha_minus_one = true;
         if (str == "testing")   testing = true;
         if (str == "times")     times = true;
         if (str == "hostname")  hostname = true;
-	if (str == "average")  return_avg = true;
+	if (str == "average")   return_avg = true;
         ++arg;
     }
 
@@ -101,28 +105,43 @@ void run (int argc, char** argv)
         beta_r_32i = 1;
     }
     else {
+      if (alpha_minus_one) {
+	alpha_r_32f = -1.0;
+        alpha_r_64f = -1.0;
+        alpha_c_32f = -1.0;
+        alpha_c_64f = -1.0;
+        alpha_r_32i = -1;
+      }
+      else {
         alpha_r_32f = 2.71828;
         alpha_r_64f = 2.71828;
         alpha_c_32f = 2.71828;
         alpha_c_64f = 2.71828;
         alpha_r_32i = 2;
-
-        if (zero_beta) {
-            beta_r_32f = 0.0;
-            beta_r_64f = 0.0;
-            beta_c_32f = 0.0;
-            beta_c_64f = 0.0;
-            beta_r_32i = 0;
-        }
-        else {
-            beta_r_32f = 3.14159;
-            beta_r_64f = 3.14159;
-            beta_c_32f = 3.14159;
-            beta_c_64f = 3.14159;
-            beta_r_32i = 3;
-        }
+      }
+      if (zero_beta) {
+	beta_r_32f = 0.0;
+	beta_r_64f = 0.0;
+	beta_c_32f = 0.0;
+	beta_c_64f = 0.0;
+	beta_r_32i = 0;
+      }
+      else if (one_beta) {
+	beta_r_32f = 1.0;
+	beta_r_64f = 1.0;
+	beta_c_32f = 1.0;
+	beta_c_64f = 1.0;
+	beta_r_32i = 1;
+      }
+      else {
+	beta_r_32f = 3.14159;
+	beta_r_64f = 3.14159;
+	beta_c_32f = 3.14159;
+	beta_c_64f = 3.14159;
+	beta_r_32i = 3;
+      }
     }
-
+    
     void* alpha;
     void* beta;
 
