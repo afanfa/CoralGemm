@@ -281,7 +281,8 @@ void run (int argc, char** argv)
 
     if (return_avg) {
       for(int dev = 0; dev < dev_gemms.size(); dev++)
-	printf ("Device %d: avg GFLOPS %18.2lf\n",dev,running_avg[dev]);
+	printf ("Device %d: m: %d n: %d k: %d lda: %d ldb: %d ldc: %d avg GFLOPS %18.2lf\n",dev,std::atoi(argv[7]),std::atoi(argv[8]),std::atoi(argv[9]),
+		std::atoi(argv[10]),std::atoi(argv[11]),std::atoi(argv[12]),running_avg[dev]);
       printf("Samples: %d\n",count);
     }
 }
